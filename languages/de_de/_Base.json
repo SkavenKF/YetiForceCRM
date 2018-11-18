@@ -1621,7 +1621,6 @@
     "JS_WAIT_FOR_FILE_UPLOAD": "Warten bis Dateien geladen wurden",
     "JS_ERROR_MAX_VALUE": "Eingabewert ist au\u00dferhalb der erlaubten Werte",
     "JS_YETIFORCE_COMPANY_NAME_NOT_ALLOWED": "Firmenname \u00e4ndern. Der Name YetiForce ist reserviert.",
-<<<<<<< HEAD
     "JS_INVENTORY_ITEM_MODULE_NOT_FOUND": "Modul '${sourceModule}' f\u00FCr Position'${position}' wurde nicht aktiviert.",
     "JS_DATES_SELECTED_HOLIDAYS": "Selected dates include holidays. Do you want to save?",
     "JS_MESSAGE_TOO_LONG": "Message is too long",
@@ -1629,8 +1628,5 @@
     "JS_CHAT": "Czat",
     "JS_NO_DESKTOP_PERMISSION": "Failed to obtain consent for notifications, please check your browser settings.",
     "JS_MESSAGE_DOWNLOADED_ADDRESS_DATA": "Downloaded address data"
-=======
-    "JS_INVENTORY_ITEM_MODULE_NOT_FOUND": "Modul '${sourceModule}' f\u00FCr Position'${position}' wurde nicht aktiviert."
->>>>>>> defddf0fbe87c67cb7ed2ff602c1ebf39edf1ef4
   }
 }
