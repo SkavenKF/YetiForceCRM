@@ -19,5 +19,11 @@
     "LBL_HIDE": "verstecken",
     "LBL_NO_MESSAGES": "Keine Nachricht",
     "LBL_UNREAD": "Ungelesen"
+    "LBL_DETAIL_VIEW": "Detail view",
+    "LBL_ROOM_DESCRIPTION_CRM": "Chat rooms list with records marked as favorites",
+    "LBL_ROOM_DESCRIPTION_GROUP": "Chat rooms list with user groups",
+    "LBL_ROOM_DESCRIPTION_GLOBAL": "Chat rooms list visible for all users",
+    "LBL_CHAT_USER_SWITCHED": "Chat is inactive if you switched to another user.",
+    "LBL_CHAT_NEW_MESSAGE": "New message"
   }
 }

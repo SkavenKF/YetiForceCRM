@@ -448,11 +448,8 @@ class Vtiger_Record_Model extends \App\Base
 			if ($moduleModel->isInventory()) {
 				$this->saveInventoryData($moduleName);
 			}
-			if (\App\Request::_get('createmode') === 'link') {
-				// vtlib customization: Hook provide to enable generic module relation.
-				if (\App\Request::_has('return_module') && \App\Request::_has('return_id')) {
-					vtlib\Deprecated::relateEntities(CRMEntity::getInstance(\App\Request::_get('return_module')), \App\Request::_get('return_module'), \App\Request::_get('return_id'), $moduleName, $recordId);
-				}
+			if (\App\Request::_get('createmode') === 'link' && \App\Request::_has('return_module') && \App\Request::_has('return_id')) {
+				vtlib\Deprecated::relateEntities(CRMEntity::getInstance(\App\Request::_get('return_module')), \App\Request::_get('return_module'), \App\Request::_getInteger('return_id'), $moduleName, $recordId);
 			}
 			$transaction->commit();
 		} catch (\Exception $e) {
@@ -739,7 +736,7 @@ class Vtiger_Record_Model extends \App\Base
 	public function isEditable()
 	{
 		if (!isset($this->privileges['isEditable'])) {
-			$this->privileges['isEditable'] = $this->isPermitted('EditView') && !$this->isLockByFields() && Users_Privileges_Model::checkLockEdit($this->getModuleName(), $this) === false;
+			$this->privileges['isEditable'] = $this->isPermitted('EditView') && !$this->isLockByFields() && Users_Privileges_Model::checkLockEdit($this->getModuleName(), $this) === false && empty($this->getUnlockFields());
 		}
 		return $this->privileges['isEditable'];
 	}
@@ -790,7 +787,7 @@ class Vtiger_Record_Model extends \App\Base
 			$moduleName = $this->getModuleName();
 			$recordId = $this->getId();
 			$focus = $this->getEntity();
-			$lockFields = array_merge_recursive($focus->getLockFields(), \App\Fields\Picklist::getCloseStates($this->getModule()->getId()));
+			$lockFields = $focus->getLockFields();
 			if ($lockFields) {
 				$loadData = false;
 				foreach ($lockFields as $fieldName => $values) {
@@ -804,8 +801,11 @@ class Vtiger_Record_Model extends \App\Base
 					$this->setEntity($focus);
 				}
 				foreach ($lockFields as $fieldName => $values) {
+					if (!$this->has($fieldName) && isset($focus->column_fields[$fieldName])) {
+						parent::set($fieldName, $focus->column_fields[$fieldName]);
+					}
 					foreach ($values as $value) {
-						if ($this->get($fieldName) === $value || (isset($focus->column_fields[$fieldName]) && $focus->column_fields[$fieldName] === $value)) {
+						if ($this->get($fieldName) === $value) {
 							$isLock = true;
 							break 2;
 						}
@@ -826,7 +826,7 @@ class Vtiger_Record_Model extends \App\Base
 	{
 		if (!isset($this->privileges['Unlock'])) {
 			$this->privileges['Unlock'] = !$this->isNew() && $this->isPermitted('EditView') && $this->isPermitted('OpenRecord') &&
-				Users_Privileges_Model::checkLockEdit($this->getModuleName(), $this) === false && !empty($this->getUnlockFields());
+				Users_Privileges_Model::checkLockEdit($this->getModuleName(), $this) === false && !$this->isLockByFields() && !empty($this->getUnlockFields());
 		}
 		return $this->privileges['Unlock'];
 	}
@@ -842,9 +842,9 @@ class Vtiger_Record_Model extends \App\Base
 		if (\App\Cache::staticHas($cacheName, $this->getId())) {
 			return \App\Cache::staticGet($cacheName, $this->getId());
 		}
-		$lockFields = array_merge_recursive($this->getEntity()->getLockFields(), \App\Fields\Picklist::getCloseStates($this->getModule()->getId()));
+		$lockFields = \App\Fields\Picklist::getCloseStates($this->getModule()->getId());
 		foreach ($lockFields as $fieldName => $values) {
-			if (!in_array($this->get($fieldName), $values) || !$this->getField($fieldName)->isAjaxEditable()) {
+			if (!in_array($this->getValueByField($fieldName), $values) || !$this->getField($fieldName)->isAjaxEditable()) {
 				unset($lockFields[$fieldName]);
 			}
 		}
@@ -1483,7 +1483,7 @@ class Vtiger_Record_Model extends \App\Base
 	 */
 	public function isCanAssignToHimself()
 	{
-		return \App\Fields\Owner::getType($this->getValueByField('assigned_user_id')) === \App\PrivilegeUtil::MEMBER_TYPE_GROUPS &&
+		return $this->isPermitted('AssignToYourself') && \App\Fields\Owner::getType($this->getValueByField('assigned_user_id')) === \App\PrivilegeUtil::MEMBER_TYPE_GROUPS &&
 			array_key_exists(\App\User::getCurrentUserId(), \App\Fields\Owner::getInstance($this->getModuleName())->getAccessibleUsers('', 'owner'));
 	}
 
@@ -1494,7 +1494,7 @@ class Vtiger_Record_Model extends \App\Base
 	 */
 	public function autoAssignRecord()
 	{
-		if (\App\Fields\Owner::getType($this->getValueByField('assigned_user_id')) === \App\PrivilegeUtil::MEMBER_TYPE_GROUPS) {
+		if ($this->isPermitted('AutoAssignRecord') && \App\Fields\Owner::getType($this->getValueByField('assigned_user_id')) === \App\PrivilegeUtil::MEMBER_TYPE_GROUPS) {
 			$userModel = \App\User::getCurrentUserModel();
 			$roleData = \App\PrivilegeUtil::getRoleDetail($userModel->getRole());
 			if (!empty($roleData['auto_assign'])) {
@@ -1514,13 +1514,18 @@ class Vtiger_Record_Model extends \App\Base
 	 *
 	 * @return mixed
 	 */
-	public function getValueByField($fieldName)
+	public function getValueByField(string $fieldName)
 	{
 		if (!$this->has($fieldName)) {
-			$fieldModel = $this->getModule()->getFieldByName($fieldName);
-			$idName = $this->getEntity()->tab_name_index[$fieldModel->getTableName()];
-			$value = \vtlib\Functions::getSingleFieldValue($fieldModel->getTableName(), $fieldModel->getColumnName(), $idName, $this->getId());
-			$this->set($fieldModel->getName(), $value);
+			$focus = $this->getEntity();
+			if (isset($focus->column_fields[$fieldName]) && $focus->column_fields[$fieldName] !== '') {
+				$value = $focus->column_fields[$fieldName];
+			} else {
+				$fieldModel = $this->getModule()->getFieldByName($fieldName);
+				$idName = $focus->tab_name_index[$fieldModel->getTableName()];
+				$value = \vtlib\Functions::getSingleFieldValue($fieldModel->getTableName(), $fieldModel->getColumnName(), $idName, $this->getId());
+			}
+			parent::set($fieldName, $value);
 		}
 		return $this->get($fieldName);
 	}
@@ -1607,8 +1612,7 @@ class Vtiger_Record_Model extends \App\Base
 		$image = [];
 		if (!$this->isEmpty('imagename') && $this->get('imagename') !== '[]' && $this->get('imagename') !== '""') {
 			$image = \App\Json::decode($this->get('imagename'));
-			$image = reset($image);
-			if (empty($image['path'])) {
+			if (empty($image) || !($image = \current($image)) || empty($image['path'])) {
 				\App\Log::warning("Problem with data compatibility: No parameter path [{$this->get('imagename')}]");
 				return [];
 			}
@@ -1618,9 +1622,8 @@ class Vtiger_Record_Model extends \App\Base
 			foreach ($this->getModule()->getFieldsByType('multiImage') as $fieldModel) {
 				if (!$this->isEmpty($fieldModel->getName()) && $this->get($fieldModel->getName()) !== '[]' && $this->get($fieldModel->getName()) !== '""') {
 					$image = \App\Json::decode($this->get($fieldModel->getName()));
-					$image = reset($image);
-					if (empty($image['path'])) {
-						\App\Log::warning("Problem with data compatibility: No parameter path [{$this->get($fieldModel->getName())}]");
+					if (empty($image) || !($image = \current($image)) || empty($image['path'])) {
+						\App\Log::warning("Problem with data compatibility: No parameter path [{$this->get('imagename')}]");
 						return [];
 					}
 					$image['path'] = ROOT_DIRECTORY . DIRECTORY_SEPARATOR . $image['path'];

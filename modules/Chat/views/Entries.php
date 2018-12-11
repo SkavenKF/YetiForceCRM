@@ -44,27 +44,10 @@ class Chat_Entries_View extends \App\Controller\View
 		if (!$currentUserPriviligesModel->hasModulePermission($request->getModule())) {
 			throw new \App\Exceptions\NoPermitted('ERR_NOT_ACCESSIBLE', 406);
 		}
-		if (\App\User::getCurrentUserId() !== \App\User::getCurrentUserRealId()) {
+		if ($currentUserPriviligesModel->getId() !== \App\User::getCurrentUserRealId()) {
 			throw new \App\Exceptions\NoPermitted('ERR_NOT_ACCESSIBLE', 406);
 		}
-		if ($request->has('roomType') && !$request->has('recordId')) {
-			throw new \App\Exceptions\NoPermittedToRecord('ERR_NO_PERMISSIONS_FOR_THE_RECORD', 406);
-		} elseif ($request->has('roomType') && $request->has('recordId')) {
-			$recordId = $request->getInteger('recordId');
-			switch ($request->getByType('roomType')) {
-				case 'crm':
-					$this->recordModel = Vtiger_Record_Model::getInstanceById($recordId);
-					if (!$this->recordModel->isViewable()) {
-						throw new \App\Exceptions\NoPermittedToRecord('ERR_NO_PERMISSIONS_FOR_THE_RECORD', 406);
-					}
-					break;
-				case 'group':
-					if (!\App\User::getCurrentUserModel()->getGroupNames()[$recordId]) {
-						throw new \App\Exceptions\NoPermittedToRecord('ERR_NO_PERMISSIONS_FOR_THE_RECORD', 406);
-					}
-					break;
-			}
-		}
+		$this->checkPermissionByRoom($request);
 	}
 
 	/**
@@ -213,6 +196,9 @@ class Chat_Entries_View extends \App\Controller\View
 	{
 		$chat = \App\Chat::getInstance();
 		$groupHistory = $request->getByType('groupHistory', 2);
+		if (!in_array($groupHistory, \App\Chat::ALLOWED_ROOM_TYPES)) {
+			throw new \App\Exceptions\NoPermittedToRecord('ERR_NO_PERMISSIONS_FOR_THE_RECORD', 406);
+		}
 		if ($request->isEmpty('mid')) {
 			$chatEntries = $chat->getHistoryByType($groupHistory);
 		} else {
@@ -242,5 +228,36 @@ class Chat_Entries_View extends \App\Controller\View
 	public function isSessionExtend()
 	{
 		return false;
+	}
+
+	/**
+	 * Check permission by room.
+	 *
+	 * @param \App\Request $request
+	 *
+	 * @throws \App\Exceptions\IllegalValue
+	 * @throws \App\Exceptions\NoPermittedToRecord
+	 */
+	private function checkPermissionByRoom(\App\Request $request): void
+	{
+		if ($request->has('roomType') && $request->has('recordId')) {
+			switch ($request->getByType('roomType')) {
+				case 'crm':
+					$this->recordModel = Vtiger_Record_Model::getInstanceById($request->getInteger('recordId'));
+					if (!$this->recordModel->isViewable()) {
+						throw new \App\Exceptions\NoPermittedToRecord('ERR_NO_PERMISSIONS_FOR_THE_RECORD', 406);
+					}
+					break;
+				case 'group':
+					if (!in_array($request->getInteger('recordId'), \App\User::getCurrentUserModel()->getGroups())) {
+						throw new \App\Exceptions\NoPermittedToRecord('ERR_NO_PERMISSIONS_FOR_THE_RECORD', 406);
+					}
+					break;
+				case 'global':
+					break;
+				default:
+					throw new \App\Exceptions\NoPermittedToRecord('ERR_NO_PERMISSIONS_FOR_THE_RECORD', 406);
+			}
+		}
 	}
 }

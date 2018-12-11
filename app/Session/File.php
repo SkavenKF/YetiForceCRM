@@ -28,9 +28,10 @@ class File extends Base
 				}
 				unlink($item->getPathname());
 				if (!empty($sessionData['authenticated_user_id'])) {
-					$userName = \App\User::getUserModel(empty($sessionData['baseUserId']) ? $sessionData['authenticated_user_id'] : $sessionData['baseUserId'])->getDetail('user_name');
+					$userId = empty($sessionData['baseUserId']) ? $sessionData['authenticated_user_id'] : $sessionData['baseUserId'];
+					$userName = \App\User::getUserModel($userId)->getDetail('user_name');
 					if (!empty($userName)) {
-						yield $userName;
+						yield $userId => $userName;
 					}
 				}
 			}
@@ -85,7 +86,7 @@ class File extends Base
 			$num = $pos - $offset;
 			$varName = substr($session, $offset, $num);
 			$offset += $num + 1;
-			$data = unserialize(substr($session, $offset));
+			$data = unserialize(substr($session, $offset), ['allowed_classes' => false]);
 			$return[$varName] = $data;
 			$offset += \strlen(serialize($data));
 		}
@@ -108,7 +109,7 @@ class File extends Base
 			++$offset;
 			$varName = substr($session, $offset, $num);
 			$offset += $num;
-			$data = unserialize(substr($session, $offset));
+			$data = unserialize(substr($session, $offset), ['allowed_classes' => false]);
 			$return[$varName] = $data;
 			$offset += \strlen(serialize($data));
 		}

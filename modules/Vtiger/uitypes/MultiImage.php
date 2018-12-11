@@ -47,7 +47,7 @@ class Vtiger_MultiImage_UIType extends Vtiger_Base_UIType
 		}
 		$fieldInfo = $this->getFieldModel()->getFieldInfo();
 		foreach ($value as $index => $item) {
-			if (empty($item['key']) || empty($item['name']) || empty($item['size']) || App\TextParser::getTextLength($item['key']) !== 50) {
+			if ((empty($item['name']) && empty($item['baseContent'])) && (empty($item['key']) || empty($item['name']) || empty($item['size']) || App\TextParser::getTextLength($item['key']) !== 50)) {
 				throw new \App\Exceptions\Security('ERR_ILLEGAL_FIELD_VALUE||' . $this->getFieldModel()->getFieldName() . '||' . \App\Json::encode($value), 406);
 			}
 			if ($index > (int) $fieldInfo['limit']) {
@@ -112,10 +112,8 @@ class Vtiger_MultiImage_UIType extends Vtiger_Base_UIType
 			return '[]';
 		}
 		$imagesCount = count($value);
-		if (!empty($length)) {
-			if ($imagesCount > $length) {
-				$len = $length;
-			}
+		if (!empty($length) && $imagesCount > $length) {
+			$len = $length;
 		}
 		if (empty($len)) {
 			$len = $imagesCount;

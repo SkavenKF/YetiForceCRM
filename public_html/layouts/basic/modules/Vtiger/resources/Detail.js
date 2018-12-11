@@ -963,7 +963,7 @@ jQuery.Class("Vtiger_Detail_Js", {
 			var fieldName = jQuery(element).val();
 			var elementTarget = jQuery(element);
 			var elementName = jQuery.inArray(elementTarget.data('type'), ['taxes', 'sharedOwner', 'multipicklist']) != -1 ? fieldName + '[]' : fieldName;
-			var fieldElement = jQuery('[name="' + elementName + '"]', editElement);
+			var fieldElement = jQuery('[name="' + elementName + '"]:not([type="hidden"])', editElement);
 			if (fieldElement.attr('disabled') == 'disabled') {
 				return;
 			}
@@ -982,10 +982,11 @@ jQuery.Class("Vtiger_Detail_Js", {
 			var saveHandler = function (e) {
 				thisInstance.registerNameAjaxEditEvent();
 				var element = jQuery(e.target);
-				if ((element.closest('.fieldValue').is(currentTdElement))) {
+				if (element.closest('.fieldValue').is(currentTdElement) || element.hasClass('select2-selection__choice__remove')) {
 					return;
 				}
 				currentTdElement.removeAttr('tabindex');
+				currentTdElement.removeClass('is-edit-active');
 				var previousValue = elementTarget.data('prevValue');
 				var formElement = thisInstance.getForm();
 				var formData = formElement.serializeFormData();
@@ -1055,6 +1056,7 @@ jQuery.Class("Vtiger_Detail_Js", {
 					fieldNameValueMap["field"] = fieldName;
 					fieldNameValueMap = thisInstance.getCustomFieldNameValueMap(fieldNameValueMap);
 					thisInstance.saveFieldValues(fieldNameValueMap).done(function (response) {
+						editElement.off('clickoutside');
 						readRecord.prop('disabled', false);
 						currentTdElement.progressIndicator({'mode': 'hide'});
 						detailViewValue.removeClass('d-none');
@@ -1092,6 +1094,7 @@ jQuery.Class("Vtiger_Detail_Js", {
 							}
 						}
 						fieldElement.trigger(thisInstance.fieldUpdatedEvent, {'old': previousValue, 'new': fieldValue});
+						ajaxEditNewValue = ajaxEditNewValue === undefined ? '' : ajaxEditNewValue; //data cannot be undefined
 						elementTarget.data('prevValue', ajaxEditNewValue);
 						fieldElement.data('selectedValue', ajaxEditNewValue);
 						//After saving source field value, If Target field value need to change by user, show the edit view of target field.
@@ -1500,61 +1503,71 @@ jQuery.Class("Vtiger_Detail_Js", {
 		 * Register the event to edit Description for related activities
 		 */
 		summaryViewContainer.on('click', '.editDescription', function (e) {
-			var currentTarget = jQuery(e.currentTarget);
-			var currentDiv = currentTarget.closest('.activityDescription');
-			var editElement = currentDiv.find('.edit');
-			var detailViewElement = currentDiv.find('.value');
-
-			currentTarget.hide();
-			detailViewElement.addClass('d-none');
-			editElement.removeClass('d-none').show();
-
-			var fieldnameElement = jQuery('.fieldname', editElement);
-			var fieldName = fieldnameElement.val();
-			var fieldElement = jQuery('[name="' + fieldName + '"]', editElement);
-
-			var callbackFunction = function () {
-				var previousValue = fieldnameElement.data('prevValue');
-				var ajaxEditNewValue = fieldElement.val();
-				var ajaxEditNewLable = fieldElement.val();
-				var activityDiv = currentDiv.closest('.activityEntries');
-				var activityId = activityDiv.find('.activityId').val();
-				var moduleName = activityDiv.find('.activityModule').val();
-				var activityType = activityDiv.find('.activityType').val();
-				if (previousValue == ajaxEditNewValue) {
-					editElement.addClass('d-none');
+			let currentTarget = jQuery(e.currentTarget),
+				currentDiv = currentTarget.closest('.activityDescription'),
+				editElement = currentDiv.find('.edit'),
+				detailViewElement = currentDiv.find('.value'),
+				descriptionText = currentDiv.find('.js-description-text'),
+				descriptionEmpty = currentDiv.find('.js-no-description'),
+				saveButton = currentDiv.find('.js-save-description'),
+				closeButton = currentDiv.find('.js-close-description'),
+				activityButtonContainer = currentDiv.find('.js-activity-buttons__container'),
+				fieldnameElement = jQuery('.fieldname', editElement),
+				fieldName = fieldnameElement.val(),
+				fieldElement = jQuery('[name="' + fieldName + '"]', editElement),
+				callbackFunction = () => {
+					let previousValue = fieldnameElement.data('prevValue'),
+						ajaxEditNewValue = fieldElement.val(),
+						ajaxEditNewLable = fieldElement.val(),
+						activityDiv = currentDiv.closest('.activityEntries'),
+						activityId = activityDiv.find('.activityId').val(),
+						moduleName = activityDiv.find('.activityModule').val(),
+						activityType = activityDiv.find('.activityType').val();
+					if (previousValue == ajaxEditNewValue) {
+						closeDescription();
+					} else {
+						let errorExists = fieldElement.validationEngine('validate');
+						//If validation fails
+						if (errorExists) {
+							Vtiger_Helper_Js.addClickOutSideEvent(currentDiv, callbackFunction);
+							return;
+						}
+						currentDiv.progressIndicator();
+						editElement.add(activityButtonContainer).addClass('d-none');
+						AppConnector.request({
+							action: 'SaveAjax',
+							record: activityId,
+							field: fieldName,
+							value: ajaxEditNewValue,
+							module: moduleName,
+							activitytype: activityType
+						}).done(() => {
+								currentDiv.progressIndicator({'mode': 'hide'});
+								detailViewElement.removeClass('d-none');
+								currentTarget.show();
+								descriptionText.html(ajaxEditNewLable);
+								fieldnameElement.data('prevValue', ajaxEditNewValue);
+								if (ajaxEditNewValue === '') {
+									descriptionEmpty.removeClass('d-none');
+								} else {
+									descriptionEmpty.addClass('d-none');
+								}
+							}
+						);
+					}
+				},
+				closeDescription = function () {
+					fieldElement.val(fieldnameElement.data('prevValue'));
+					editElement.add(activityButtonContainer).addClass('d-none');
 					detailViewElement.removeClass('d-none');
 					currentTarget.show();
-				} else {
-					var errorExists = fieldElement.validationEngine('validate');
-					//If validation fails
-					if (errorExists) {
-						Vtiger_Helper_Js.addClickOutSideEvent(currentDiv, callbackFunction);
-						return;
-					}
-					currentDiv.progressIndicator();
-					editElement.addClass('d-none');
-					AppConnector.request({
-						action: 'SaveAjax',
-						record: activityId,
-						field: fieldName,
-						value: ajaxEditNewValue,
-						module: moduleName,
-						activitytype: activityType
-					}).done(function (data) {
-							currentDiv.progressIndicator({'mode': 'hide'});
-							detailViewElement.removeClass('d-none');
-							currentTarget.show();
-							detailViewElement.html(ajaxEditNewLable);
-							fieldnameElement.data('prevValue', ajaxEditNewValue);
-						}
-					);
-				}
-			}
-
-			fieldElement.focus();
-			//adding focusout event on the currentDiv - to save the ajax edit of description values
-			currentDiv.one('focusout', callbackFunction);
+				};
+			currentTarget.hide();
+			detailViewElement.addClass('d-none');
+			activityButtonContainer.removeClass('d-none');
+			editElement.removeClass('d-none').show();
+			saveButton.one('click', callbackFunction);
+			closeButton.one('click', closeDescription);
 		});
 
 		/*
@@ -2148,38 +2161,30 @@ jQuery.Class("Vtiger_Detail_Js", {
 		});
 	},
 	registerMailPreviewWidget: function (container) {
-		var thisInstance = this;
-		container.on('click', '.showMailBody', function (e) {
-			var row = $(e.currentTarget).closest('.row');
-			var mailBody = row.find('.mailBody');
-			var mailTeaser = row.find('.mailTeaser');
-			var faCaretIcon = $(e.currentTarget).find('[data-fa-i2svg]');
-			if (mailBody.hasClass('d-none')) {
-				mailBody.removeClass('d-none');
-				mailTeaser.addClass('d-none');
-				faCaretIcon.removeClass("fa-caret-down").addClass("fa-caret-up");
-			} else {
-				mailBody.addClass('d-none');
-				mailTeaser.removeClass('d-none');
-				faCaretIcon.removeClass("fa-caret-up").addClass("fa-caret-down");
-			}
+		const self = this;
+		container.on('click', '.showMailBody', (e) => {
+			let row = $(e.currentTarget).closest('.row'),
+				mailBody = row.find('.mailBody'),
+				mailTeaser = row.find('.mailTeaser');
+			mailBody.toggleClass('d-none');
+			mailTeaser.toggleClass('d-none');
 		});
 		container.find('[name="mail-type"]').on('change', function (e) {
-			thisInstance.loadMailPreviewWidget(container);
+			self.loadMailPreviewWidget(container);
 		});
 		container.find('[name="mailFilter"]').on('change', function (e) {
-			thisInstance.loadMailPreviewWidget(container);
+			self.loadMailPreviewWidget(container);
 		});
-		container.on('click', '.showMailsModal', function (e) {
-			var url = $(e.currentTarget).data('url');
+		container.on('click', '.showMailsModal', (e) => {
+			let url = $(e.currentTarget).data('url');
 			url += '&type=' + container.find('[name="mail-type"]').val();
 			if (container.find('[name="mailFilter"]').length > 0) {
 				url += '&mailFilter=' + container.find('[name="mailFilter"]').val();
 			}
-			var progressIndicatorElement = jQuery.progressIndicator();
-			app.showModalWindow("", url, function (data) {
+			let progressIndicatorElement = jQuery.progressIndicator();
+			app.showModalWindow("", url, (data) => {
 				progressIndicatorElement.progressIndicator({'mode': 'hide'});
-				thisInstance.registerMailPreviewWidget(data);
+				self.registerMailPreviewWidget(data);
 				Vtiger_Index_Js.registerMailButtons(data);
 				data.find('.expandAllMails').click();
 			});
@@ -2187,12 +2192,12 @@ jQuery.Class("Vtiger_Detail_Js", {
 		container.find('.expandAllMails').on('click', function (e) {
 			container.find('.mailBody').removeClass('d-none');
 			container.find('.mailTeaser').addClass('d-none');
-			container.find('.showMailBody [data-fa-i2svg]').removeClass("fa-caret-down").addClass("fa-caret-up");
+			container.find('.showMailBody .js-toggle-icon').removeClass('fa-caret-down').addClass('fa-caret-up');
 		});
 		container.find('.collapseAllMails').on('click', function (e) {
 			container.find('.mailBody').addClass('d-none');
 			container.find('.mailTeaser').removeClass('d-none');
-			container.find('.showMailBody [data-fa-i2svg]').removeClass("fa-caret-up").addClass("fa-caret-down");
+			container.find('.showMailBody .js-toggle-icon').removeClass('fa-caret-up').addClass('fa-caret-down');
 		});
 	},
 	loadMailPreviewWidget: function (widgetContent) {
@@ -2296,6 +2301,7 @@ jQuery.Class("Vtiger_Detail_Js", {
 		thisInstance.registerEmailEvents(detailContentsHolder);
 		thisInstance.registerMapsEvents(detailContentsHolder);
 		thisInstance.registerSocialMediaEvents(detailContentsHolder);
+		thisInstance.registerSubProducts(detailContentsHolder);
 		App.Fields.Date.register(detailContentsHolder);
 		App.Fields.DateTime.register(detailContentsHolder);
 		App.Fields.MultiImage.register(detailContentsHolder);
@@ -2317,10 +2323,11 @@ jQuery.Class("Vtiger_Detail_Js", {
 			var nextPageUrl = url + '&page=' + requestedPage;
 			thisInstance.loadContents(nextPageUrl);
 		});
-		detailContentsHolder.on('click', 'div.detailViewTable div.fieldValue', function (e) {
+		detailContentsHolder.on('click', 'div.detailViewTable div.fieldValue:not(.is-edit-active)', function (e) {
 			if (jQuery(e.target).closest('a').hasClass('btnNoFastEdit'))
 				return;
 			var currentTdElement = jQuery(e.currentTarget);
+			currentTdElement.addClass('is-edit-active');
 			thisInstance.ajaxEditHandling(currentTdElement);
 		});
 		detailContentsHolder.on('click', 'div.recordDetails span.squeezedWell', function (e) {
@@ -2569,6 +2576,7 @@ jQuery.Class("Vtiger_Detail_Js", {
 		var text = switchBtn.data('basic-text') + stats;
 		switchBtnParent.removeTextNode();
 		switchBtnParent.append(text);
+		new App.Fields.Text.Editor(container.find('.js-editor'), {height: '5em', toolbar: 'Min'});
 	},
 	refreshCommentContainer: function (commentId) {
 		var thisInstance = this;
@@ -2615,7 +2623,7 @@ jQuery.Class("Vtiger_Detail_Js", {
 				let btnGroup = btnToolbar;
 				btn = btnToolbar.find('.showModal');
 				if (btn.length === 0) {
-					btnGroup.append('<div class="c-btn-link btn-group  c-btn-link--responsive"><button class="btn btn btn-outline-dark btn-sm showModal js-popover-tooltip" data-js="click|popover" data-placement="bottom" data-content="' + app.vtranslate('LBL_EXPORT_PDF') + '" data-target="focus hover" data-url="index.php?module=' + app.getModuleName() + '&view=PDF&fromview=Detail&record=' + app.getRecordId() + '" data-original-title="" title=""><span class="fas fa-file-excel icon-in-button"></span></button></div>');
+					btnGroup.append('<div class="c-btn-link btn-group  c-btn-link--responsive"><button class="btn btn btn-outline-dark btn-sm showModal js-popover-tooltip" data-js="click|popover" data-placement="bottom" data-content="' + app.vtranslate('LBL_EXPORT_PDF') + '" data-target="focus hover" data-url="index.php?module=' + app.getModuleName() + '&view=PDF&fromview=Detail&record=' + app.getRecordId() + '" data-original-title="" title=""><span class="fas fa-file-pdf icon-in-button"></span></button></div>');
 				}
 			}
 		}).fail(function (data, err) {
@@ -2668,7 +2676,7 @@ jQuery.Class("Vtiger_Detail_Js", {
 			// Not detail view page
 			return;
 		}
-		this.registerSubProducts(detailViewContainer);
+
 		this.registerSetReadRecord(detailViewContainer);
 		this.registerEventForPicklistDependencySetup(this.getForm());
 		this.getForm().validationEngine(app.validationEngineOptionsForRecord);

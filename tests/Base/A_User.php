@@ -100,7 +100,7 @@ class A_User extends \Tests\Base
 		$this->assertSame($row['email1'], 'testuser@yetiforce.com');
 		$this->assertSame($row['first_name'], 'Test');
 		$this->assertSame($row['last_name'], 'YetiForce');
-		$this->assertSame((new \App\Db\Query())->select('roleid')->from('vtiger_user2role')->where(['userid' => static::$id])->scalar(), 'H2');
+		$this->assertSame((new \App\Db\Query())->select(['roleid'])->from('vtiger_user2role')->where(['userid' => static::$id])->scalar(), 'H2');
 	}
 
 	/**
@@ -122,7 +122,7 @@ class A_User extends \Tests\Base
 		$this->assertSame($row['email1'], 'testuser-edit@yetiforce.com');
 		$this->assertSame($row['first_name'], 'Test edit');
 		$this->assertSame($row['last_name'], 'YetiForce edit');
-		$this->assertSame((new \App\Db\Query())->select('roleid')->from('vtiger_user2role')->where(['userid' => static::$id])->scalar(), 'H1');
+		$this->assertSame((new \App\Db\Query())->select(['roleid'])->from('vtiger_user2role')->where(['userid' => static::$id])->scalar(), 'H1');
 	}
 
 	/**
@@ -145,13 +145,8 @@ class A_User extends \Tests\Base
 		$moduleModel = \Settings_Users_Module_Model::getInstance();
 		$this->assertNotNull($moduleModel, 'Object is null');
 		$moduleModel->saveLocks($param);
-
 		$this->assertFileExists('user_privileges/locks.php');
-		$locks = $moduleModel->getLocks();
-		$locksRaw = ['H6' => ['copy', 'paste']];
-
-		$this->assertCount(0, \array_diff_assoc($locksRaw, $locks), 'Unexpected value in lock array');
-		$this->assertCount(0, \array_diff_assoc($locksRaw['H6'], $locks['H6']), 'Unexpected value in lock array');
+		$this->assertSame(['H6' => ['copy', 'paste']], $moduleModel->getLocks(), 'Unexpected value in lock array');
 	}
 
 	/**

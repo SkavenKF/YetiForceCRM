@@ -20,7 +20,7 @@ class CustomView
 	/**
 	 * Standard filter conditions for date fields.
 	 */
-	const STD_FILTER_CONDITIONS = ['custom', 'prevfy', 'thisfy', 'nextfy', 'prevfq', 'thisfq', 'nextfq', 'yesterday', 'today', 'tomorrow',
+	const STD_FILTER_CONDITIONS = ['custom', 'prevfy', 'thisfy', 'nextfy', 'prevfq', 'thisfq', 'nextfq', 'yesterday', 'today', 'untiltoday', 'tomorrow',
 		'lastweek', 'thisweek', 'nextweek', 'lastmonth', 'thismonth', 'nextmonth',
 		'last7days', 'last15days', 'last30days', 'last60days', 'last90days', 'last120days', 'next15days', 'next30days', 'next60days', 'next90days', 'next120days', ];
 
@@ -44,8 +44,9 @@ class CustomView
 		'y' => 'LBL_IS_EMPTY',
 		'ny' => 'LBL_IS_NOT_EMPTY',
 		'om' => 'LBL_CURRENTLY_LOGGED_USER',
+		'ogr' => 'LBL_CURRENTLY_LOGGED_USER_GROUP',
 		'wr' => 'LBL_IS_WATCHING_RECORD',
-		'nwr' => 'LBL_IS_NOT_WATCHING_RECORD',
+		'nwr' => 'LBL_IS_NOT_WATCHING_RECORD'
 	];
 
 	/**
@@ -63,6 +64,7 @@ class CustomView
 		'nextfq' => ['label' => 'LBL_NEXT_FQ'],
 		'yesterday' => ['label' => 'LBL_YESTERDAY'],
 		'today' => ['label' => 'LBL_TODAY'],
+		'untiltoday' => ['label' => 'LBL_UNTIL_TODAY'],
 		'tomorrow' => ['label' => 'LBL_TOMORROW'],
 		'lastweek' => ['label' => 'LBL_LAST_WEEK'],
 		'thisweek' => ['label' => 'LBL_CURRENT_WEEK'],
@@ -86,7 +88,7 @@ class CustomView
 	/**
 	 * Operators without values.
 	 */
-	const FILTERS_WITHOUT_VALUES = ['y', 'ny', 'om', 'wr', 'nwr'];
+	const FILTERS_WITHOUT_VALUES = ['y', 'ny', 'om', 'ogr', 'wr', 'nwr'];
 
 	/**
 	 * Do we have muliple ids?
@@ -240,10 +242,10 @@ class CustomView
 	public static function setDefaultSortOrderBy($moduleName, $defaultSortOrderBy = [])
 	{
 		if (Request::_has('orderby')) {
-			$_SESSION['lvs'][$moduleName]['sortby'] = Request::_get('orderby');
+			$_SESSION['lvs'][$moduleName]['sortby'] = Request::_getForSql('orderby');
 		}
 		if (Request::_has('sortorder')) {
-			$_SESSION['lvs'][$moduleName]['sorder'] = Request::_get('sortorder');
+			$_SESSION['lvs'][$moduleName]['sorder'] = Request::_getForSql('sortorder');
 		}
 		if (isset($defaultSortOrderBy['orderBy'])) {
 			$_SESSION['lvs'][$moduleName]['sortby'] = $defaultSortOrderBy['orderBy'];
@@ -316,15 +318,9 @@ class CustomView
 	private function getCustomViewFromFile($cvId)
 	{
 		\App\Log::trace(__METHOD__ . ' - ' . $cvId);
-		$filterDir = 'modules' . DIRECTORY_SEPARATOR . $this->moduleName . DIRECTORY_SEPARATOR . 'filters' . DIRECTORY_SEPARATOR . $cvId . '.php';
-		if (file_exists($filterDir)) {
-			$handlerClass = \Vtiger_Loader::getComponentClassName('Filter', $cvId, $this->moduleName);
-			$filter = new $handlerClass();
-			Cache::staticSave('getCustomView', $cvId, $filter);
-		} else {
-			Log::error(Language::translate('LBL_NOT_FOUND_VIEW') . "cvId: $cvId");
-			throw new Exceptions\AppException('LBL_NOT_FOUND_VIEW');
-		}
+		$handlerClass = \Vtiger_Loader::getComponentClassName('Filter', $cvId, $this->moduleName);
+		$filter = new $handlerClass();
+		Cache::staticSave('getCustomView', $cvId, $filter);
 		return $filter;
 	}
 
@@ -506,12 +502,15 @@ class CustomView
 	/**
 	 * Get fields to detect duplicates.
 	 *
-	 * @param int $viewId
+	 * @param int|string $viewId
 	 *
 	 * @return array
 	 */
-	public static function getDuplicateFields(int $viewId): array
+	public static function getDuplicateFields($viewId): array
 	{
+		if (!is_numeric($viewId)) {
+			return [];
+		}
 		if (Cache::has('CustomView_GetDuplicateFields', $viewId)) {
 			return Cache::get('CustomView_GetDuplicateFields', $viewId);
 		}
@@ -577,7 +576,7 @@ class CustomView
 		if (Cache::has('GetDefaultCvId', $cacheName)) {
 			return Cache::get('GetDefaultCvId', $cacheName);
 		}
-		$query = (new Db\Query())->select('userid, default_cvid')->from('vtiger_user_module_preferences')->where(['tabid' => Module::getModuleId($this->moduleName)]);
+		$query = (new Db\Query())->select(['userid', 'default_cvid'])->from('vtiger_user_module_preferences')->where(['tabid' => Module::getModuleId($this->moduleName)]);
 		$data = $query->createCommand()->queryAllByGroup();
 		$userId = 'Users:' . $this->user->getId();
 		if (isset($data[$userId])) {
@@ -700,11 +699,16 @@ class CustomView
 	{
 		Log::trace(__METHOD__);
 		$info = $this->getInfoFilter($this->moduleName);
-		foreach ($info as &$values) {
+		$returnValue = '';
+		foreach ($info as $index => &$values) {
 			if ($values['presence'] === 0) {
-				return $returnData ? $values : $values['cvid'];
+				$returnValue = $index;
+				break;
+			} elseif ($values['presence'] === 2) {
+				$returnValue = $index;
 			}
 		}
+		return $returnData ? $info[$returnValue] : $returnValue;
 	}
 
 	/**
@@ -751,7 +755,7 @@ class CustomView
 			$info['sequence'] = (int) ($info['sequence'] ?? 0);
 			$info['userid'] = (int) ($info['userid'] ?? 0);
 		} else {
-			$info = $query->where(['entitytype' => $mixed])->all();
+			$info = $query->where(['entitytype' => $mixed])->indexBy('cvid')->all();
 			foreach ($info as &$item) {
 				$item['cvid'] = (int) $item['cvid'];
 				$item['setdefault'] = (int) $item['setdefault'];

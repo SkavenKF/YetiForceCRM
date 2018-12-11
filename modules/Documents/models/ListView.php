@@ -35,8 +35,9 @@ class Documents_ListView_Model extends Vtiger_ListView_Model
 				$advancedLinks[] = [
 					'linktype' => 'DETAIL_VIEW_ADDITIONAL',
 					'linklabel' => \App\Language::translate('LBL_EXPORT_PDF'),
-					'linkurl' => "javascript:Vtiger_Header_Js.getInstance().showPdfModal('index.php?module=$moduleName&view=PDF&fromview=List');",
-					'linkicon' => 'fas fa-file-excel',
+					'linkdata' => ['url' => 'index.php?module=' . $moduleName . '&view=PDF&fromview=List', 'type' => 'modal'],
+					'linkclass' => 'js-mass-action',
+					'linkicon' => 'fas fa-file-pdf',
 					'title' => \App\Language::translate('LBL_EXPORT_PDF'),
 				];
 			}
@@ -46,8 +47,7 @@ class Documents_ListView_Model extends Vtiger_ListView_Model
 			$advancedLinks[] = [
 				'linktype' => 'LISTVIEWMASSACTION',
 				'linklabel' => 'LBL_QUICK_EXPORT_TO_EXCEL',
-				'dataUrl' => 'index.php?module=' . $moduleName . '&view=PDF&fromview=List',
-				'linkclass' => 'js-mass-action',
+				'linkurl' => "javascript:Vtiger_List_Js.triggerQuickExportToExcel('$moduleName')",
 				'linkicon' => 'fas fa-file-excel',
 			];
 		}
@@ -59,7 +59,7 @@ class Documents_ListView_Model extends Vtiger_ListView_Model
 				$advancedLinks[] = [
 					'linktype' => 'LISTVIEW',
 					'linklabel' => 'LBL_GENERATE_RECORDS',
-					'linkurl' => "javascript:Vtiger_List_Js.triggerGenerateRecords('index.php?module=$moduleName&view=GenerateModal&fromview=List');",
+					'linkurl' => 'javascript:Vtiger_List_Js.triggerGenerateRecords();',
 				];
 			}
 		}
@@ -121,7 +121,7 @@ class Documents_ListView_Model extends Vtiger_ListView_Model
 				'linklabel' => 'LBL_MASS_ACTIVATE',
 				'linkurl' => 'javascript:',
 				'dataUrl' => "index.php?module=$moduleName&action=MassState&state=Active&sourceView=List",
-				'linkclass' => 'massRecordEvent',
+				'linkclass' => 'js-mass-record-event',
 				'linkicon' => 'fas fa-undo-alt',
 			];
 		}
@@ -131,7 +131,7 @@ class Documents_ListView_Model extends Vtiger_ListView_Model
 				'linklabel' => 'LBL_MASS_ARCHIVE',
 				'linkurl' => 'javascript:',
 				'dataUrl' => "index.php?module=$moduleName'&action=MassState&state=Archived&sourceView=List",
-				'linkclass' => 'massRecordEvent',
+				'linkclass' => 'js-mass-record-event',
 				'linkicon' => 'fas fa-archive',
 			];
 		}
@@ -141,7 +141,7 @@ class Documents_ListView_Model extends Vtiger_ListView_Model
 				'linklabel' => 'LBL_MASS_MOVE_TO_TRASH',
 				'linkurl' => 'javascript:',
 				'dataUrl' => "index.php?module=$moduleName&action=MassState&state=Trash&sourceView=List",
-				'linkclass' => 'massRecordEvent',
+				'linkclass' => 'js-mass-record-event',
 				'linkicon' => 'fas fa-trash-alt',
 			];
 		}
@@ -151,7 +151,7 @@ class Documents_ListView_Model extends Vtiger_ListView_Model
 				'linklabel' => 'LBL_MASS_DELETE',
 				'linkurl' => 'javascript:',
 				'dataUrl' => "index.php?module=$moduleName&action=MassDelete&sourceView=List",
-				'linkclass' => 'massRecordEvent',
+				'linkclass' => 'js-mass-record-event',
 				'linkicon' => 'fas fa-eraser',
 			];
 		}

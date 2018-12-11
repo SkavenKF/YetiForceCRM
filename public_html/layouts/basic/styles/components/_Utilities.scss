@@ -86,11 +86,18 @@
 }
 
 .u-text-ellipsis--no-hover,
-.js-popover-tooltip--ellipsis .js-popover-text,
-.js-popover-tooltip--ellipsis .c-popover-text {
+.js-popover-tooltip--ellipsis,
+.js-popover-tooltip--ellipsis-icon .js-popover-text,
+.js-popover-tooltip--ellipsis-icon .c-popover-text {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+
+.js-popover--before-positioned {
+	opacity: 0;
+	height: 0;
+	overflow: hidden;
 }
 
 .u-text-ellipsis--not-active {
@@ -411,6 +418,12 @@
 
 .u-cursor-grab {
 	cursor: -webkit-grab;
+}
+
+.u-cursor-scroll-all {
+	* {
+		cursor: all-scroll !important;
+	}
 }
 
 .u-overflow-auto {

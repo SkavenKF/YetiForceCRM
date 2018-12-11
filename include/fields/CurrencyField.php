@@ -369,7 +369,6 @@ class CurrencyField
 				$wholeNumberFirstPart = str_pad($wholeNumberFirstPart, $numberLength + $gapsToBeFilled, '0', STR_PAD_LEFT);
 				// Split the first part of tne number into chunks of 2 digits
 				$wholeNumberFirstPartElements = str_split($wholeNumberFirstPart, 2);
-				$wholeNumberFirstPart = ltrim(implode($curSeparator, $wholeNumberFirstPartElements), '0');
 				$wholeNumberFirstPart = implode($curSeparator, $wholeNumberFirstPartElements);
 				if ($wholeNumberFirstPart != 0) {
 					$wholeNumberFirstPart = ltrim($wholeNumberFirstPart, '0');
@@ -450,7 +449,7 @@ class CurrencyField
 	 */
 	public static function getDBCurrencyId()
 	{
-		$id = (new \App\Db\Query())->select('id')->from('vtiger_currency_info')->where(['<', 'defaultid', 0])->scalar();
+		$id = (new \App\Db\Query())->select(['id'])->from('vtiger_currency_info')->where(['<', 'defaultid', 0])->scalar();
 		if ($id) {
 			return $id;
 		}

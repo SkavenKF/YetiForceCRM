@@ -284,7 +284,9 @@
     "LBL_EXPORT_DATA_IN_CURRENT_PAGE": "Exportati datele din pagina curenta",
     "LBL_EXPORT_RECORDS": "Exportati inregistrari",
     "LBL_EXPORT_SELECTED_RECORDS": "Exportati inregistrarile selectate",
+    "LBL_FAVORITE_OWNERS": "Favorites",
     "LBL_Feb": "Feb",
+    "LBL_FILE_HAS_BEEN_MODIFIED": "The file was modified because it contained dangerous code.",
     "LBL_FIELDS": "Campuri",
     "LBL_FILTER": "Filtru",
     "LBL_FILTER_FIELD": "Camp filtru",
@@ -532,6 +534,7 @@
     "LBL_TO_LC": "catre",
     "LBL_ACTIVITY_TO": "catre",
     "LBL_TODAY": "Astazi",
+    "LBL_UNTIL_TODAY": "Until today",
     "LBL_TOMORROW": "Maine",
     "LBL_TOOLS": "Unelte",
     "LBL_TOOLS_HEADER": "UNELTE",
@@ -890,6 +893,7 @@
     "LBL_AVERAGE_WORKING_TIME": "Durata medie de lucru",
     "Employees Time Control": "Control Timp Angajati",
     "LBL_CURRENTLY_LOGGED_USER": "In prezent sunteti conectat(a) la utilizatorul",
+    "LBL_CURRENTLY_LOGGED_USER_GROUP": "Group of logged in user",
     "LBL_IS_WATCHING_RECORD": "Inregistrare urmarita",
     "LBL_IS_NOT_WATCHING_RECORD": "Inregistrare neurmarita",
     "LBL_TO_REALIZE": "Pentru procesare",
@@ -899,6 +903,7 @@
     "BTN_WORKFLOW_TRIGGER": "Aceasta unelta va permite sa porniti manual un flux de lucru si sa executati automat toate sarcinile selectate.",
     "PaymentsOut": "Plati efectuate",
     "PaymentsIn": "Plati incasate",
+    "LBL_CONSENT_TO_SEND": "Consent to send",
     "LBL_VIEW_CREATE": "Creaza",
     "LBL_VIEW_EDIT": "Modifica",
     "LBL_VIEW_DETAIL": "Detalii",
@@ -1291,10 +1296,13 @@
     "LBL_USE_VARIABLES": "In this field you can use variables, you just need to copy any variable to the clipboard from the panel and paste in here. The field can contain several variables.",
     "BTN_RECORD_OPEN": "Unblock record",
     "LBL_REMOVE_RELATION": "Remove relation",
-    "LBL_REMOVE_RELATION_CONFIRMATION": "Are you sure you want to remove this relation? Only the relation will be removed."
+    "LBL_REMOVE_RELATION_CONFIRMATION": "Are you sure you want to remove this relation? Only the relation will be removed.",
+    "LBL_MODIFICATION_SUCCESSFUL_AND_RELOAD": "Modification successful. Reload view to see the changes.",
+    "LBL_MODIFICATION_FAILURE": "No modification has been performed"
   },
   "js": {
     "JS_APPROVE": "Approve",
+    "JS_ADD_RECORD": "The record has been added.",
     "JS_SUMMARY": "Sumar",
     "JS_LOADING_PLEASE_WAIT": "Se incarca, va rugam asteptati.",
     "JS_SELECTED_RECORDS": "Inregistrari selectate",
@@ -1381,6 +1389,7 @@
     "JS_PLEASE_ENTER_VALID_EMAIL_ADDRESS": "Introduceti o adresa de email valida",
     "JS_PLEASE_ENTER_VALID_TIME": "Introduceti ora valida",
     "JS_PLEASE_ENTER_VALID_TWITTER_ACCOUNT": "Please enter valid Twitter account",
+    "JS_EMAIL_DUPLICATED": "Email address is duplicated",
     "JS_PLEASE_SELECT_AN_ACCOUNT_TO_COPY_ADDRESS": "Va rugam selectati Contul pentru a copia adresa",
     "JS_PLEASE_SELECT_AN_CONTACT_TO_COPY_ADDRESS": "Va rugam selectati Contactul pentru a copia adresa",
     "JS_PLEASE_SELECT_AN_LEAD_TO_COPY_ADDRESS": "Selectati Lead-ul pentru a copia adresa",
@@ -1616,6 +1625,7 @@
     "JS_EMAIL_RESET_RELATIONS_CONFIRMATION": "Sunteti sigur ca doriti sa resetati mesajele email corelate inca odata?",
     "JS_MASS_REVIEWING_CHANGES_CONFIRMATION": "Sigur doriti sa examinati modificarile din inregistrarile selectate?",
     "JS_LBL_REVIEW_CHANGES": "Review changes",
+    "JS_BASE_CURRENCY_CHANGED_TO_DISABLE_CURRENCY": " is the base currency and cannot be disabled",
     "JS_MARKED_AS_READ": "Marcat ca citit",
     "JS_FILE_EXCEEDS_MAX_UPLOAD_SIZE": "Cel putin unul dintre fisierele atasate este prea mare",
     "JS_LAST_7_DAYS": "Ultimele 7 zile",
@@ -1658,6 +1668,7 @@
     "JS_CHAT_NEW_MESSAGE": "New message",
     "JS_CHAT": "Czat",
     "JS_NO_DESKTOP_PERMISSION": "Failed to obtain consent for notifications, please check your browser settings.",
-    "JS_MESSAGE_DOWNLOADED_ADDRESS_DATA": "Downloaded address data"
+    "JS_MESSAGE_DOWNLOADED_ADDRESS_DATA": "Downloaded address data",
+    "JS_UNEXPECTED_ERROR": "Unexpected error occurred"
   }
 }
