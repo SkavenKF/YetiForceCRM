@@ -25,16 +25,16 @@
     "ERR_NO_PERMISSIONS_TO_CREATE_DIRECTORIES": "Keine Berechtigung um Verzeichnisse zu erstellen",
     "ERR_AUTO_LOGOUT": "Automatisch abgemeldet aufgrund keiner Aktivit\u00e4t",
     "ERR_FIELD_NOT_FOUND": "Feld nicht gefunden",
-    "ERR_NO_VALUE": "No value",
-    "ERR_API": "Error in API",
-    "ERR_MODULE_DOES_NOT_EXIST": "Module %s does not exist",
-    "ERR_RECORD_NOT_FOUND": "There is no record with ID: %s",
-    "ERR_NO_PERMISSIONS_TO_FIELD": "No permissions to the field",
-    "ERR_NO_PERMITTED_TO_VIEW": "No permissions to view",
-    "ERR_CURRENCY_TABLE_DOWNLOAD": "Error while downloading the exchange rate table.",
-    "ERR_ITERATIONS_LIMIT_EXCEEDED": "Exceeded iteration limit.",
-    "ERR_CANNOT_PARSE_SERVER_RESPONSE": "Error while parsing server responses",
-    "ERR_CANNOT_CONNECT_TO_REMOTE": "Error while connecting to remote server",
-    "ERR_NO_INTERNET_CONNECTION": "No Internet connection"
+    "ERR_NO_VALUE": "Kein Wert",
+    "ERR_API": "Fehler in API",
+    "ERR_MODULE_DOES_NOT_EXIST": "Modul %s existiert nicht",
+    "ERR_RECORD_NOT_FOUND": "Es gibt keinen Datensatz mit der ID: %s",
+    "ERR_NO_PERMISSIONS_TO_FIELD": "Kein Berechtigung f\u00fcr das Feld",
+    "ERR_NO_PERMITTED_TO_VIEW": "Keine Berechtigung f\u00fcr die Anzeige",
+    "ERR_CURRENCY_TABLE_DOWNLOAD": "Fehler beim Laden der Wechselkurstabelle.",
+    "ERR_ITERATIONS_LIMIT_EXCEEDED": "Iterationslimit \u00fcberschritten.",
+    "ERR_CANNOT_PARSE_SERVER_RESPONSE": "Fehler beim Analysieren der Serverantworten",
+    "ERR_CANNOT_CONNECT_TO_REMOTE": "Fehler beim Verbinden mit dem Remote-Server",
+    "ERR_NO_INTERNET_CONNECTION": "Keine Internetverbdingun"
   }
 }
