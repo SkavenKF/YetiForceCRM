@@ -342,6 +342,10 @@
 	min-height: 30%;
 }
 
+.u-min-h-85vh {
+	min-height: 85vh;
+}
+
 //--- WHITE SPACE ---//
 .u-white-space-nowrap {
 	white-space: nowrap !important;
@@ -438,8 +442,8 @@
 	overflow-x: hidden !important;
 }
 
-@include media-breakpoint-down(xs) {
-	.u-overflow-scroll-xs-down {
+@include media-breakpoint-down(xsm) {
+	.u-overflow-scroll-xsm-down {
 		overflow: scroll !important;
 	}
 }

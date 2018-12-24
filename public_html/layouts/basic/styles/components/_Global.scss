@@ -52,7 +52,6 @@
 		@extend .justify-content-sm-start;
 		@extend .justify-content-lg-end;
 		@extend .col-sm-12;
-		height: 100%;
 
 		label {
 			line-height: 1.7;
@@ -131,10 +130,8 @@
 
 .c-btn-collapsible {
 	overflow: hidden;
-
-	@include u-transition(all 275ms ease);
-
 	max-width: calculate-rem(40px);
+	@include u-transition(all 275ms ease);
 
 	&.btn-xs {
 		max-width: calculate-rem(25px);
@@ -148,23 +145,20 @@
 		max-width: calculate-rem(50px);
 	}
 
-	span {
+	&__text {
 		opacity: 0;
 		text-indent: -6px;
 		display: inline-block;
-
 		@include u-transition(all 275ms ease);
 	}
 
 	&:hover {
 		max-width: calculate-rem(300px) !important;
-
 		@include u-transition(all 275ms ease);
 
-		span {
+		.c-btn-collapsible__text {
 			opacity: 1;
 			text-indent: 0;
-
 			@include u-transition(all 275ms ease);
 		}
 	}

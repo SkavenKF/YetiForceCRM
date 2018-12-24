@@ -249,15 +249,15 @@ class Request
 		if (isset($this->purifiedValuesByExploded[$key])) {
 			return $this->purifiedValuesByExploded[$key];
 		}
+		$value = [];
 		if (isset($this->rawValues[$key])) {
 			if ($this->rawValues[$key] === '') {
-				return [];
+				return $value;
 			}
 			$value = explode($delimiter, $this->rawValues[$key]);
 			if ($value) {
 				$value = $type ? Purifier::purifyByType($value, $type) : Purifier::purify($value);
 			}
-
 			return $this->purifiedValuesByExploded[$key] = $value;
 		}
 		return $value;
@@ -439,8 +439,8 @@ class Request
 			foreach ($_SERVER as $key => $value) {
 				if (substr($key, 0, 5) === 'HTTP_') {
 					$key = str_replace(' ', '-', strtoupper(str_replace('_', ' ', substr($key, 5))));
+					$data[$key] = Purifier::purify($value);
 				}
-				$data[$key] = Purifier::purify($value);
 			}
 		} else {
 			$data = array_change_key_case(apache_request_headers(), CASE_UPPER);
